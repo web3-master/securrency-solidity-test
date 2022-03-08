@@ -34,7 +34,7 @@ contract Replace {
         );
     }
 
-    function replace(string memory input, string memory stringToSearch, string memory stringToReplace) public returns (string memory) {
+    function replace(string memory input, string memory stringToSearch, string memory stringToReplace) public pure returns (string memory) {
         // Write your code here
 
         bytes memory bytesToSearch = bytes(stringToSearch);
