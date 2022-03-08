@@ -16,47 +16,6 @@ import "hardhat/console.sol";
  */
 contract Replace {
 
-    function replace(string memory input, string memory stringToSearch, string memory stringToReplace) public pure returns (string memory) {
-        // Write your code here
-
-        string memory retval = input;
-        int startPos = 0;
-        uint stringToSearchLength = stringLength(stringToSearch);
-
-        while (true) {
-            startPos = findInString(retval, stringToSearch, uint(startPos));
-            if (startPos == -1) return retval;
-
-            uint start =  uint(startPos);
-            string memory beforeString;
-            string memory afterString;
-        
-            if (start <= 1) {
-                beforeString = "";
-            } else {
-                beforeString = getSlice(retval, 1, start-1);
-            }
-            uint end = uint(stringLength(beforeString) + stringToSearchLength);
-        
-            if (end>= uint(stringLength(retval))) {
-                afterString = "";
-            } else {
-                afterString = getSlice(retval, end +1, uint(stringLength(retval))-end);
-            }
-
-            retval = concatString(beforeString, stringToReplace);
-
-            if(stringLength(afterString)>0) {
-                retval = concatString(retval, afterString);
-            }
-
-            startPos += int(stringToSearchLength);
-        }
-
-
-        return retval;
-    }
-
     function test1() external {
         string memory result = replace("one two one two on e ononee", "one", "three");
         string memory expected = "three two three two on e onthreee";
@@ -75,11 +34,50 @@ contract Replace {
         );
     }
 
+    function replace(string memory input, string memory stringToSearch, string memory stringToReplace) public returns (string memory) {
+        // Write your code here
 
-    ///
-    /// https://ethereum.stackexchange.com/questions/106801/how-to-code-a-string-replace-function-in-solidity
-    ///
-    function getSlice(string memory source, uint startPos, uint numChars) public pure returns (string memory) {
+        bytes memory bytesToSearch = bytes(stringToSearch);
+        bytes memory bytesToReplace = bytes(stringToReplace);
+        bytes memory resultBytes = bytes(input);
+        int startPos = 0;
+        uint stringToSearchLength = stringLength(bytesToSearch);
+
+        while (true) {
+            startPos = findInString(resultBytes, bytesToSearch, uint(startPos));
+            if (startPos == -1) return string(resultBytes);
+
+            uint start =  uint(startPos);
+
+            bytes memory beforeBytes;
+            bytes memory afterBytes;
+        
+            if (start <= 1) {
+                beforeBytes = bytes("");
+            } else {
+                beforeBytes = getSlice(resultBytes, 1, start-1);
+            }
+            uint end = uint(stringLength(beforeBytes) + stringToSearchLength);
+        
+            if (end>= uint(stringLength(resultBytes))) {
+                afterBytes = bytes("");
+            } else {
+                afterBytes = getSlice(resultBytes, end +1, uint(stringLength(resultBytes))-end);
+            }
+
+            resultBytes = concatString(beforeBytes, bytesToReplace);
+
+            if(stringLength(afterBytes)>0) {
+                resultBytes = concatString(resultBytes, afterBytes);
+            }
+
+            startPos += int(stringToSearchLength);
+        }
+
+        return string(resultBytes);
+    }
+
+    function getSlice(bytes memory source, uint startPos, uint numChars) public pure returns (bytes memory) {
        uint ustartPos = uint(startPos -1);
        uint _numChars = uint(numChars);
 
@@ -93,10 +91,10 @@ contract Replace {
       for (uint i = 0; i<_numChars; i++) {
           result[i] = sourcebytes[i + ustartPos];
       }
-      return string(result); 
+      return result;
     }
 
-    function findInString(string memory source, string memory findString, uint startAfter ) public pure returns(int) {
+    function findInString(bytes memory source, bytes memory findString, uint startAfter ) public pure returns(int) {
         uint targetLength = stringLength(findString);
         uint sourceLength = stringLength(source);
          
@@ -105,7 +103,7 @@ contract Replace {
 
          uint sourceIndex = startAfter + 1;
          uint targetIndex = 1;
-         string memory firstChar = charAt(findString, 1);
+         bytes memory firstChar = charAt(findString, 1);
          
          while(sourceIndex <= (sourceLength - targetLength)) {
              int index = findChar(source, firstChar, sourceIndex -1);
@@ -117,8 +115,8 @@ contract Replace {
              targetIndex = 2;
              while(targetIndex <= targetLength) {
                  
-                 string memory charToFind=charAt(findString, targetIndex);
-                 string memory nextSourceChar = charAt(source, nextSourceIndex);
+                 bytes memory charToFind = charAt(findString, targetIndex);
+                 bytes memory nextSourceChar = charAt(source, nextSourceIndex);
           
                  if (!(charCompare(charToFind, nextSourceChar))) {
                      break;
@@ -135,20 +133,19 @@ contract Replace {
          return -1;
     }
 
-    function charAt(string memory str, uint startIndex) public pure returns (string memory) {
-        bytes memory strBytes = bytes(str);
+    function charAt(bytes memory str, uint startIndex) public pure returns (bytes memory) {
         bytes memory result = new bytes(1);
-        result[0] = strBytes[startIndex - 1];
-        return string(result);
+        result[0] = str[startIndex - 1];
+        return result;
     }
 
-    function findChar(string memory source, string memory charToFind, uint startAfter) public pure returns(int) {
+    function findChar(bytes memory source, bytes memory charToFind, uint startAfter) public pure returns(int) {
         uint sourceLength = stringLength(source);
 
          uint sourceIndex = startAfter + 1;
          
          while(sourceIndex <= (sourceLength - 1)) {
-            string memory charToCompare=charAt(source, sourceIndex);
+            bytes memory charToCompare = charAt(source, sourceIndex);
             if (charCompare(charToCompare, charToFind) == true) {
                 return int(sourceIndex);
             } else {
@@ -158,15 +155,15 @@ contract Replace {
          return -1;
     }
 
-    function stringLength(string memory s) public pure returns (uint256) {
-        return bytes(s).length;
+    function stringLength(bytes memory s) public pure returns (uint256) {
+        return s.length;
     }
 
-    function concatString(string memory a, string memory b) internal pure returns (string memory) {
-        return string(abi.encodePacked(a, b));
+    function concatString(bytes memory a, bytes memory b) internal pure returns (bytes memory) {
+        return bytes(abi.encodePacked(a, b));
     }
 
-    function charCompare(string memory a, string memory b) public pure returns (bool) {
-        return bytes(a)[0] == bytes(b)[0];
+    function charCompare(bytes memory a, bytes memory b) public pure returns (bool) {
+        return a[0] == b[0];
     }
 }
