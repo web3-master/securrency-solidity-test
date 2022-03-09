@@ -1,4 +1,9 @@
 
+// Copyright SECURRENCY INC.
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.7.0 <0.9.0;
+import "hardhat/console.sol";
+
     ///             ///
     ///    Task 2   ///
     ///             ///
