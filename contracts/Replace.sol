@@ -1,6 +1,6 @@
 // Copyright SECURRENCY INC.
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.8.4 <0.9.0;
 import "hardhat/console.sol";
 
     ///             ///
@@ -41,7 +41,7 @@ contract Replace {
         bytes memory bytesToReplace = bytes(stringToReplace);
         bytes memory resultBytes = bytes(input);
         int startPos = 0;
-        uint stringToSearchLength = stringLength(bytesToSearch);
+        uint stringToSearchLength = bytesToSearch.length;
 
         while (true) {
             startPos = findInString(resultBytes, bytesToSearch, uint(startPos));
@@ -57,19 +57,15 @@ contract Replace {
             } else {
                 beforeBytes = getSlice(resultBytes, 1, start-1);
             }
-            uint end = uint(stringLength(beforeBytes) + stringToSearchLength);
+            uint end = beforeBytes.length + stringToSearchLength;
         
-            if (end>= uint(stringLength(resultBytes))) {
+            if (end >= resultBytes.length) {
                 afterBytes = bytes("");
             } else {
-                afterBytes = getSlice(resultBytes, end +1, uint(stringLength(resultBytes))-end);
+                afterBytes = getSlice(resultBytes, end + 1, resultBytes.length - end);
             }
 
-            resultBytes = concatString(beforeBytes, bytesToReplace);
-
-            if(stringLength(afterBytes)>0) {
-                resultBytes = concatString(resultBytes, afterBytes);
-            }
+            resultBytes = concatString(beforeBytes, bytesToReplace, afterBytes);
 
             startPos += int(stringToSearchLength);
         }
@@ -78,25 +74,23 @@ contract Replace {
     }
 
     function getSlice(bytes memory source, uint startPos, uint numChars) public pure returns (bytes memory) {
-       uint ustartPos = uint(startPos -1);
-       uint _numChars = uint(numChars);
+        uint ustartPos = startPos - 1;
 
-        bytes memory sourcebytes = bytes(source);
-       if (_numChars==0) {
-           _numChars = ((sourcebytes.length - ustartPos) + 1);
-       }
-      
-      bytes memory result = new bytes(_numChars);     
+        if (numChars == 0) {
+            numChars = source.length - ustartPos + 1;
+        }
+        
+        bytes memory result = new bytes(numChars);     
 
-      for (uint i = 0; i<_numChars; i++) {
-          result[i] = sourcebytes[i + ustartPos];
-      }
-      return result;
+        for (uint i = 0; i< numChars; i++) {
+            result[i] = source[i + ustartPos];
+        }
+        return result;
     }
 
     function findInString(bytes memory source, bytes memory findString, uint startAfter ) public pure returns(int) {
-        uint targetLength = stringLength(findString);
-        uint sourceLength = stringLength(source);
+        uint targetLength = findString.length;
+        uint sourceLength = source.length;
          
         require(targetLength > 0 || sourceLength > 0, "missing param source or findingString");
         require (startAfter <= (sourceLength - targetLength) + 1, "startAfter is larger than source - findstring"); 
@@ -140,7 +134,7 @@ contract Replace {
     }
 
     function findChar(bytes memory source, bytes memory charToFind, uint startAfter) public pure returns(int) {
-        uint sourceLength = stringLength(source);
+        uint sourceLength = source.length;
 
          uint sourceIndex = startAfter + 1;
          
@@ -155,12 +149,8 @@ contract Replace {
          return -1;
     }
 
-    function stringLength(bytes memory s) public pure returns (uint256) {
-        return s.length;
-    }
-
-    function concatString(bytes memory a, bytes memory b) internal pure returns (bytes memory) {
-        return bytes(abi.encodePacked(a, b));
+    function concatString(bytes memory a, bytes memory b, bytes memory c) internal pure returns (bytes memory) {
+        return bytes.concat(a, b, c);
     }
 
     function charCompare(bytes memory a, bytes memory b) public pure returns (bool) {

@@ -1,7 +1,7 @@
 /* global describe it before ethers */
 const { assert } = require("chai");
 
-describe("Replace test", async function () {
+describe.only("Replace test", async function () {
   let tx;
   let replaceContract;
 
